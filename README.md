@@ -20,6 +20,8 @@ ros2 launch pylon_camera2 camera.launch.py
 ## Run Parameters
 The node can be configured with the parameters below.
 
+**namespace**: Namespace to run node under
+
 **camera_names**: List of names for the cameras - first in the list is considered the `master` camera for synchronized cameras. See the section below for how to provide custom names to the cameras.
 
 **trigger_mode**: Mode for triggering the cameras. Options are:
