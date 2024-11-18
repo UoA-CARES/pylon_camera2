@@ -64,7 +64,6 @@ class CameraPublisher(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
     def timer_callback(self) -> None:
-        start = timer()
         time_stamp = self.get_clock().now().to_msg()
 
         camera: Camera
@@ -74,7 +73,6 @@ class CameraPublisher(Node):
         # TODO thread this portion?
         for camera in self.cameras.values():
             camera.publish_data(time_stamp, self.display)
-        self.get_logger().info(f"3: {timer() - start:.4f}")
 
     def destroy_node(self) -> None:
         for camera in self.cameras.values():
