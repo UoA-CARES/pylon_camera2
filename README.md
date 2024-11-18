@@ -33,7 +33,7 @@ Further details on the synchronization methods are below.
 
 **pub_frequency**: Desired frequency at which images are published.
 
-**calibration_path**: Path to the camera calibration files (default no calibration "").
+**calibration_path**: Path to the camera calibration files (default no calibration "") - expected to have naming format `camera_name_calibration.yaml'.
 
 **display**: Boolean to enable or disable image display (default True).
 
