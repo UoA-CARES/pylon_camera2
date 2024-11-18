@@ -5,6 +5,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    declare_namespace = DeclareLaunchArgument(
+        "namespace", default_value="", description="Namespace"
+    )
+
     declare_camera_names = DeclareLaunchArgument(
         "camera_names",
         default_value='["left","right"]',
@@ -33,6 +37,7 @@ def generate_launch_description():
         "display", default_value="true", description="Display images"
     )
 
+    namespace = LaunchConfiguration(declare_namespace.name)
     camera_names = LaunchConfiguration(declare_camera_names.name)
     trigger_mode = LaunchConfiguration(declare_trigger_mode.name)
     pub_frequency = LaunchConfiguration(declare_pub_frequency.name)
@@ -41,6 +46,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            declare_namespace,
             declare_camera_names,
             declare_trigger_mode,
             declare_pub_frequency,
@@ -51,6 +57,7 @@ def generate_launch_description():
                 executable="pylon_camera_node",
                 name="pylon_camera_node",
                 output="screen",
+                namespace=namespace,
                 parameters=[
                     {
                         declare_camera_names.name: camera_names,
