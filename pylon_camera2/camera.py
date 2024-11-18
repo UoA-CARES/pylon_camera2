@@ -92,6 +92,7 @@ class Camera:
         trigger_mode: int = 0,
         master: bool = False,
         calibration_path: str = "",
+        display: bool = True,
     ):
         self.camera_name = camera_name
         self.camera = get_camera_by_name(camera_name)
@@ -102,6 +103,8 @@ class Camera:
         self.master = master
 
         self.calibration_path = calibration_path
+
+        self.display = display
 
         # Open the camera before accessing any parameters
         self.camera.Open()
@@ -115,12 +118,19 @@ class Camera:
         self.converter.OutputPixelFormat = pylon.PixelType_BGR8packed
         self.converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
 
+        self.image_window_name = f"image-{self.camera_name}"
+        self.image_rec_window_name = f"image-rect-{self.camera_name}"
+
         # Set up OpenCV bridge to convert to ROS 2 Image messages
         self.bridge = CvBridge()
 
         self.image_publisher = self.node.create_publisher(
             Image, f"{camera_name}/image_color", 1
         )
+
+        if self.display:
+            cv2.namedWindow(self.image_window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(self.image_window_name, 500, 500)
 
         self.camera_info: CameraInfo = CameraInfo()
         self.info_publisher: Publisher = None
@@ -140,6 +150,10 @@ class Camera:
             self.image_rect_publisher = self.node.create_publisher(
                 Image, f"{camera_name}/image_rect_color", 1
             )
+
+            if self.display:
+                cv2.namedWindow(self.image_rec_window_name, cv2.WINDOW_NORMAL)
+                cv2.resizeWindow(self.image_rec_window_name, 500, 500)
 
     def _toggle_trigger_pin(self) -> None:
         # //Use lineselector to select a GPIO port.
@@ -228,9 +242,7 @@ class Camera:
             if self.master:
                 self.camera.ExecuteSoftwareTrigger()
 
-    def get_image(
-        self, timeout: int = 5000, display: bool = True
-    ) -> tuple[np.ndarray, np.ndarray | None]:
+    def get_image(self, timeout: int = 5000) -> tuple[np.ndarray, np.ndarray | None]:
         try:
             grab_result = self.camera.RetrieveResult(
                 timeout, pylon.TimeoutHandling_ThrowException
@@ -250,11 +262,11 @@ class Camera:
             if self.calibrated:
                 rec_image_bgr = rectify_image(image_bgr, self.camera_info)
 
-            if display:
-                cv2.imshow(f"image-{self.camera_name}", image_bgr)
+            if self.display:
+                cv2.imshow(self.image_window_name, image_bgr)
 
                 if rec_image_bgr is not None:
-                    cv2.imshow(f"image-rect-{self.camera_name}", rec_image_bgr)
+                    cv2.imshow(self.image_rec_window_name, rec_image_bgr)
 
                 cv2.waitKey(10)
 
@@ -264,8 +276,8 @@ class Camera:
             f"Error {self.camera_name}: {grab_result.GetErrorCode()} {grab_result.GetErrorDescription()}"
         )
 
-    def publish_data(self, time_stamp: Time, display: bool = True) -> None:
-        image_bgr, rec_image_bgr = self.get_image(display=display)
+    def publish_data(self, time_stamp: Time) -> None:
+        image_bgr, rec_image_bgr = self.get_image()
 
         # Set the header information (optional, e.g., setting frame_id or timestamp)
         header = Header()

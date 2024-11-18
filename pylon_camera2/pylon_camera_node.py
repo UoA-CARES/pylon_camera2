@@ -36,13 +36,13 @@ class CameraPublisher(Node):
         )
         calibration_path = os.path.expanduser(calibration_path)
 
-        self.display = self.get_parameter("display").get_parameter_value().bool_value
+        display = self.get_parameter("display").get_parameter_value().bool_value
 
         self.get_logger().info(f"Camera names: {camera_names}")
         self.get_logger().info(f"Trigger mode: {trigger_mode}")
         self.get_logger().info(f"Publish frequency: {pub_frequency}")
         self.get_logger().info(f"Calibration path: {calibration_path}")
-        self.get_logger().info(f"Display: {self.display}")
+        self.get_logger().info(f"Display: {display}")
 
         self.cameras: dict[str:Camera] = {}
 
@@ -56,6 +56,7 @@ class CameraPublisher(Node):
                 trigger_mode=trigger_mode,
                 master=master,
                 calibration_path=calibration_path,
+                display=display,
             )
 
             master = False
@@ -72,7 +73,7 @@ class CameraPublisher(Node):
 
         # TODO thread this portion?
         for camera in self.cameras.values():
-            camera.publish_data(time_stamp, self.display)
+            camera.publish_data(time_stamp)
 
     def destroy_node(self) -> None:
         for camera in self.cameras.values():
