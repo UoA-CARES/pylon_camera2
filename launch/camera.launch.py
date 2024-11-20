@@ -30,7 +30,7 @@ def generate_launch_description():
     declare_calibration_path = DeclareLaunchArgument(
         "calibration_path",
         default_value="",
-        description="Path to camera calibration files - expected to contain camera_name.yaml files",
+        description="Path to camera calibration files - expected to contain camera_name_calibration.yaml files",
     )
 
     declare_display = DeclareLaunchArgument(

@@ -19,11 +19,9 @@ def rectify_image(image: np.ndarray, camera_info: CameraInfo) -> np.ndarray:
 
     # Get the rectification matrix
     R = np.array(camera_info.r).reshape((3, 3))
-    R = np.eye(3) if np.count_nonzero(R) == 0 else R  # Non-Stereo use Identity
 
     # Get the new camera matrix
     P = np.array(camera_info.p).reshape((3, 4))
-    P = K if np.count_nonzero(P) == 0 else P  # Non-Stereo use K
 
     # Get the image size
     h, w, _ = image.shape
