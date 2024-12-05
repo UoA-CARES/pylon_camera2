@@ -1,3 +1,4 @@
+import sys
 import time
 
 import cv2
@@ -77,7 +78,7 @@ def map_to_camera_info(yaml_map: dict) -> CameraInfo:
 
 
 def load_camerainfo(filepath: str) -> CameraInfo:
-    with open(filepath) as file:
+    with open(filepath, encoding="utf-8") as file:
         s_map = yaml.load(file, Loader=yaml.Loader)
         return map_to_camera_info(s_map)
 
@@ -120,7 +121,7 @@ class Camera:
         self.image_rec_window_name = f"image-rect-{self.camera_name}"
 
         # Set up OpenCV bridge to convert to ROS 2 Image messages
-        self.bridge = CvBridge()
+        self.cv_bridge = CvBridge()
 
         self.image_publisher = self.node.create_publisher(
             Image, f"{camera_name}/image_color", 1
@@ -245,11 +246,11 @@ class Camera:
             grab_result = self.camera.RetrieveResult(
                 timeout, pylon.TimeoutHandling_ThrowException
             )
-        except Exception:
+        except pylon.TimeoutException:
             self.node.get_logger().error(
                 f"Camera: {self.camera_name} failed to capture image due to timeout - using trigger mode: {self.trigger_mode}"
             )
-            exit()
+            sys.exit()
 
         if grab_result.GrabSucceeded():
             image = self.converter.Convert(grab_result)
@@ -283,7 +284,7 @@ class Camera:
         header.frame_id = f"{self.camera_name}_camera_frame"
 
         # Convert to ROS 2 Image message
-        ros_image_msg = self.bridge.cv2_to_imgmsg(image_bgr, encoding="bgr8")
+        ros_image_msg = self.cv_bridge.cv2_to_imgmsg(image_bgr, encoding="bgr8")
 
         self.camera_info.header = header
         ros_image_msg.header = header
@@ -293,7 +294,7 @@ class Camera:
         self.info_publisher.publish(self.camera_info)
 
         if rec_image_bgr is not None:
-            ros_rec_image_msg = self.bridge.cv2_to_imgmsg(
+            ros_rec_image_msg = self.cv_bridge.cv2_to_imgmsg(
                 rec_image_bgr, encoding="bgr8"
             )
             ros_rec_image_msg.header = header
