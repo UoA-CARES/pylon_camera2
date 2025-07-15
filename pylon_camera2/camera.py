@@ -135,15 +135,15 @@ class Camera:
         self.info_publisher: Publisher = None
         self.image_rect_publisher: Publisher = None
 
-        self.info_publisher = self.node.create_publisher(
-            CameraInfo, f"{camera_name}/camera_info", 1
-        )
-
         self.calibrated = False
         if self.calibration_path != "":
             self.calibrated = True
             self.camera_info = load_camerainfo(
                 f"{self.calibration_path}{self.camera_name}_calibration.yaml"
+            )
+
+            self.info_publisher = self.node.create_publisher(
+                CameraInfo, f"{camera_name}/camera_info", 1
             )
 
             self.image_rect_publisher = self.node.create_publisher(
@@ -291,9 +291,10 @@ class Camera:
 
         # Publish the data
         self.image_publisher.publish(ros_image_msg)
-        self.info_publisher.publish(self.camera_info)
-
+        
         if rec_image_bgr is not None:
+            self.info_publisher.publish(self.camera_info)
+
             ros_rec_image_msg = self.cv_bridge.cv2_to_imgmsg(
                 rec_image_bgr, encoding="bgr8"
             )
