@@ -17,7 +17,7 @@ setup(
             glob(os.path.join("launch", "*launch.[pxy][yma]*")),
         ),
     ],
-    install_requires=["setuptools", "pypylon==4.0.0"],
+    install_requires=open('requirements.txt').read().splitlines(),
     zip_safe=True,
     maintainer="anyone",
     maintainer_email="henryamwilliams@gmail.com",

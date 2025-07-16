@@ -11,9 +11,10 @@ Run `pip3 install -r requirements' in the **root directory** of this package.
 `colcon build` your ros2 workspace.
 
 # Usage
-This node can handle N number of basler cameras connected to the same machine. The recommneded utilisation of this package is via the launch file.
+This node can handle N number of basler cameras connected to the same machine. 
+The recommneded utilisation of this package is via the launch file.
 
-```
+```sh
 ros2 launch pylon_camera2 camera.launch.py
 ```
 
