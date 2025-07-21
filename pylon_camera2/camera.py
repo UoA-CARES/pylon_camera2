@@ -52,35 +52,27 @@ def get_camera_by_name(camera_name: str) -> pylon.InstantCamera:
     raise ValueError(f"Camera with name '{camera_name}' not found")
 
 
-# TODO shift to cares_lib_ros2
-def map_to_camera_info(yaml_map: dict) -> CameraInfo:
-    camera_info = CameraInfo()
-    camera_info.header.frame_id = yaml_map["header"]["frame_id"]
-    camera_info.height = yaml_map["height"]
-    camera_info.width = yaml_map["width"]
-    camera_info.distortion_model = yaml_map["distortion_model"]
-    camera_info.d = yaml_map["D"]
-    camera_info.k = yaml_map["K"]
-    camera_info.r = yaml_map["R"]
-    camera_info.p = yaml_map["P"]
+def load_camerainfo(file_path: str) -> CameraInfo:
+    fs = cv2.FileStorage(file_path, cv2.FILE_STORAGE_READ)
 
-    # TODO read these from the camera directly
-    # camera_info.binning_x = s_map["binning_x"]
-    # camera_info.binning_y = s_map["binning_y"]
+    image_size = fs.getNode("image_size").mat()
+    K = fs.getNode("K").mat()
+    D = fs.getNode("D").mat()
+    R = fs.getNode("R").mat()
+    P = fs.getNode("P").mat()
 
-    # camera_info.roi.x_offset = s_map["roi"]["x_offset"]
-    # camera_info.roi.y_offset = s_map["roi"]["y_offset"]
-    # camera_info.roi.height = s_map["roi"]["height"]
-    # camera_info.roi.width = s_map["roi"]["width"]
-    # camera_info.roi.do_rectify = s_map["roi"]["do_rectify"]
+    fs.release()
 
-    return camera_info
+    cam_info = CameraInfo()
+    cam_info.width = int(image_size[1])
+    cam_info.height = int(image_size[0])
+    cam_info.k = K.flatten().tolist()
+    cam_info.d = D.flatten().tolist()
+    cam_info.r = R.flatten().tolist()
+    cam_info.p = P.flatten().tolist()
+    cam_info.distortion_model = "plumb_bob"  # Or "rational_polynomial" if needed
 
-
-def load_camerainfo(filepath: str) -> CameraInfo:
-    with open(filepath, encoding="utf-8") as file:
-        s_map = yaml.load(file, Loader=yaml.Loader)
-        return map_to_camera_info(s_map)
+    return cam_info
 
 
 class Camera:
@@ -139,7 +131,7 @@ class Camera:
         if self.calibration_path != "":
             self.calibrated = True
             self.camera_info = load_camerainfo(
-                f"{self.calibration_path}{self.camera_name}_calibration.yaml"
+                f"{self.calibration_path}/{self.camera_name}_calibration.yaml"
             )
 
             self.info_publisher = self.node.create_publisher(
@@ -291,7 +283,7 @@ class Camera:
 
         # Publish the data
         self.image_publisher.publish(ros_image_msg)
-        
+
         if rec_image_bgr is not None:
             self.info_publisher.publish(self.camera_info)
 
